@@ -1,60 +1,94 @@
 <div class="main-container">
-  <mat-card class="shift-card mat-elevation-z8">
-    <mat-card-header>
-      <mat-card-title>Control de Jornada Laboral</mat-card-title>
-      <mat-card-subtitle>Indesap - Sistema de Registro</mat-card-subtitle>
-    </mat-card-header>
+  <div class="content-wrapper">
+    
+    <!-- Tarjeta Principal del Cronómetro -->
+    <mat-card class="shift-card mat-elevation-z8">
+      <mat-card-header>
+        <mat-card-title>Control de Jornada Laboral</mat-card-title>
+        <mat-card-subtitle>Indesap - Sistema de Registro</mat-card-subtitle>
+      </mat-card-header>
 
-    <mat-card-content class="card-content">
+      <mat-card-content class="card-content">
+        <form [formGroup]="shiftForm" class="form-section">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Código Único del Trabajador</mat-label>
+            <input matInput formControlName="workerCode" placeholder="Ej. EMP-001" [readonly]="activeShift !== null" />
+          </mat-form-field>
+        </form>
+
+        @if (activeShift) {
+          <div class="timer-container animate-fade-in">
+            <p class="status-badge active">● JORNADA ACTIVA</p>
+            <h2 class="timer-clock">{{ timerDisplay }}</h2>
+            <p class="start-time-text">Iniciado a las: {{ activeShift.startTime | date:'mediumTime' }}</p>
+          </div>
+        } @else {
+          <div class="timer-container idle">
+            <p class="status-badge idle">○ SIN JORNADA ACTIVA</p>
+            <h2 class="timer-clock">00:00:00</h2>
+          </div>
+        }
+      </mat-card-content>
+
+      <mat-card-actions class="card-actions">
+        @if (!activeShift) {
+          <button mat-flat-button color="primary" class="action-btn" [disabled]="shiftForm.invalid || isLoading" (click)="onStartShift()">
+            <mat-icon>play_arrow</mat-icon> Iniciar Jornada
+          </button>
+        } @else {
+          <button mat-flat-button color="warn" class="action-btn" [disabled]="isLoading" (click)="onEndShift()">
+            <mat-icon>stop</mat-icon> Terminar Jornada
+          </button>
+        }
+      </mat-card-actions>
+    </mat-card>
+
+    <!-- TABLA DE HISTORIAL DE TURNOS (PLUS DE LA APP) -->
+    <mat-card class="table-card mat-elevation-z8">
+      <h3 class="table-title">Historial General de Turnos</h3>
       
-      <!-- Formulario de ingreso de código -->
-      <form [formGroup]="shiftForm" class="form-section">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Código Único del Trabajador</mat-label>
-          <input matInput formControlName="workerCode" placeholder="Ej. EMP-001" [readonly]="activeShift !== null" />
-          <mat-icon matSuffix>badge</mat-icon>
-          @if (shiftForm.get('workerCode')?.hasError('required') && shiftForm.get('workerCode')?.touched) {
-            <mat-error>El código del trabajador es obligatorio</mat-error>
-          }
-        </mat-form-field>
-      </form>
+      <div class="table-container">
+        <table mat-table [dataSource]="shiftsHistory" class="mat-elevation-z0">
+          
+          <!-- Worker Code Column -->
+          <ng-container matColumnDef="workerCode">
+            <th mat-header-cell *matHeaderCellDef> Trabajador </th>
+            <td mat-cell *matCellDef="let element"> <strong>{{ element.workerCode }}</strong> </td>
+          </ng-container>
 
-      <!-- Panel del Cronómetro en tiempo real (Visible solo si hay turno activo) -->
-      @if (activeShift) {
-        <div class="timer-container animate-fade-in">
-          <p class="status-badge active">● JORNADA ACTIVA</p>
-          <h2 class="timer-clock">{{ timerDisplay }}</h2>
-          <p class="start-time-text">Iniciado a las: {{ activeShift.startTime | date:'mediumTime' }}</p>
-        </div>
-      } @else {
-        <div class="timer-container idle">
-          <p class="status-badge idle">○ SIN JORNADA ACTIVA</p>
-          <h2 class="timer-clock">00:00:00</h2>
-        </div>
-      }
+          <!-- Start Time Column -->
+          <ng-container matColumnDef="startTime">
+            <th mat-header-cell *matHeaderCellDef> Entrada </th>
+            <td mat-cell *matCellDef="let element"> {{ element.startTime | date:'short' }} </td>
+          </ng-container>
 
-    </mat-card-content>
+          <!-- End Time Column -->
+          <ng-container matColumnDef="endTime">
+            <th mat-header-cell *matHeaderCellDef> Salida </th>
+            <td mat-cell *matCellDef="let element"> {{ element.endTime ? (element.endTime | date:'short') : 'En curso...' }} </td>
+          </ng-container>
 
-    <mat-card-actions class="card-actions">
-      @if (!activeShift) {
-        <button 
-          mat-flat-button 
-          color="primary" 
-          class="action-btn"
-          [disabled]="shiftForm.invalid || isLoading"
-          (click)="onStartShift()">
-          <mat-icon>play_arrow</mat-icon> Iniciar Jornada
-        </button>
-      } @else {
-        <button 
-          mat-flat-button 
-          color="warn" 
-          class="action-btn"
-          [disabled]="isLoading"
-          (click)="onEndShift()">
-          <mat-icon>stop</mat-icon> Terminar Jornada
-        </button>
-      }
-    </mat-card-actions>
-  </mat-card>
+          <!-- Total Time Column -->
+          <ng-container matColumnDef="totalTimeFormatted">
+            <th mat-header-cell *matHeaderCellDef> Tiempo Laborado </th>
+            <td mat-cell *matCellDef="let element"> {{ element.totalTimeFormatted || '--:--:--' }} </td>
+          </ng-container>
+
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef> Estado </th>
+            <td mat-cell *matCellDef="let element">
+              <span class="status-chip" [ngClass]="element.status === 'ACTIVE' ? 'chip-active' : 'chip-finished'">
+                {{ element.status }}
+              </span>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </div>
+    </mat-card>
+
+  </div>
 </div>

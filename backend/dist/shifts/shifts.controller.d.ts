@@ -15,4 +15,8 @@ export declare class ShiftsController {
         hasActiveShift: boolean;
         data: import("./schemas/shift.schema").Shift | null;
     }>;
+    findAll(): Promise<{
+        message: string;
+        data: import("./schemas/shift.schema").Shift[];
+    }>;
 }

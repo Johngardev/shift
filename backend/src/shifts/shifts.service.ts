@@ -6,7 +6,7 @@ import { StartShiftDto, EndShiftDto } from './dto/shift.dto';
 
 @Injectable()
 export class ShiftsService {
-  constructor(@InjectModel(Shift.name) private shiftModel: Model<ShiftDocument>) {}
+  constructor(@InjectModel(Shift.name) private shiftModel: Model<ShiftDocument>) { }
 
   // 1. INICIAR JORNADA (Happy Path + Escenario de Error 1)
   async startShift(startShiftDto: StartShiftDto): Promise<Shift> {
@@ -65,5 +65,9 @@ export class ShiftsService {
     const hours = Math.floor(ms / (1000 * 60 * 60));
 
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }
+
+  async findAll(): Promise<Shift[]> {
+    return this.shiftModel.find().sort({ createdAt: -1 }).exec();
   }
 }

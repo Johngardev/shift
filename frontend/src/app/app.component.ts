@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Subscription, interval } from 'rxjs';
@@ -11,6 +11,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatTableModule } from '@angular/material/table';
+import { MatChipsModule } from '@angular/material/chips';
 
 import { ShiftService } from './services/shift.service';
 
@@ -32,17 +34,24 @@ interface Shift {
     MatButtonModule,
     MatIconModule,
     MatSnackBarModule,
-    MatDividerModule],
+    MatDividerModule,
+    MatTableModule,
+    MatChipsModule
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
-export class AppComponent implements OnDestroy {
+export class AppComponent implements OnInit, OnDestroy {
   title = 'Shift Management System - PRUEBA TECNICA';
   shiftForm: FormGroup;
   activeShift: Shift | null = null;
   timerDisplay: string = '00:00:00';
   private timerSub?: Subscription;
   isLoading = false;
+
+  // Propiedades para la tabla de turnos
+  shiftsHistory: Shift[] = [];
+  displayedColumns: string[] = ['workerCode', 'startTime', 'endTime', 'totalTimeFormatted', 'status'];
 
   constructor(
     private fb: FormBuilder,
@@ -51,6 +60,22 @@ export class AppComponent implements OnDestroy {
   ) {
     this.shiftForm = this.fb.group({
       workerCode: ['', [Validators.required, Validators.minLength(3)]]
+    });
+  }
+
+  ngOnInit(): void {
+    this.loadShiftsHistory();
+  }
+
+  // Cargar historial de turnos
+  loadShiftsHistory(): void {
+    this.shiftService.getAllShifts().subscribe({
+      next: (response) => {
+        this.shiftsHistory = response.data;
+      },
+      error: () => {
+        this.showToast('No se pudo cargar el historial de turnos', 'error');
+      }
     });
   }
 
@@ -66,10 +91,10 @@ export class AppComponent implements OnDestroy {
         this.startClientTimer(new Date(this.activeShift.startTime).getTime());
         this.isLoading = false;
         this.showToast('¡Jornada iniciada con éxito!', 'success');
+        this.loadShiftsHistory(); // Recargar tabla
       },
       error: (err) => {
         this.isLoading = false;
-        // Captura el Error 1 (HTTP 400 - Ya tiene jornada activa)
         const errorMessage = err.error?.message || 'Error al iniciar la jornada';
         this.showToast(errorMessage, 'error');
       }
@@ -85,21 +110,20 @@ export class AppComponent implements OnDestroy {
     this.shiftService.endShift(workerCode).subscribe({
       next: (response) => {
         this.stopClientTimer();
-        this.showToast(`Jornada finalizada. Tiempo total: ${response.data.totalTimeFormatted}`, 'success');
+        this.showToast(`Jornada finalizada. Tiempo: ${response.data.totalTimeFormatted}`, 'success');
         this.activeShift = null;
         this.isLoading = false;
         this.shiftForm.reset();
+        this.loadShiftsHistory(); // Recargar tabla
       },
       error: (err) => {
         this.isLoading = false;
-        // Captura el Error 2 (HTTP 404 - No hay jornada activa)
         const errorMessage = err.error?.message || 'Error al finalizar la jornada';
         this.showToast(errorMessage, 'error');
       }
     });
   }
 
-  // Cronómetro en tiempo real usando RxJS interval
   private startClientTimer(startTimeMs: number): void {
     this.timerSub = interval(1000).subscribe(() => {
       const now = Date.now();

@@ -5,7 +5,7 @@ import { StartShiftDto, EndShiftDto } from './dto/shift.dto';
 @Controller('shifts')
 @UsePipes(new ValidationPipe({ whitelist: true }))
 export class ShiftsController {
-  constructor(private readonly shiftsService: ShiftsService) {}
+  constructor(private readonly shiftsService: ShiftsService) { }
 
   @Post('start')
   async startShift(@Body() startShiftDto: StartShiftDto) {
@@ -31,6 +31,15 @@ export class ShiftsController {
     return {
       hasActiveShift: !!shift,
       data: shift,
+    };
+  }
+
+  @Get()
+  async findAll() {
+    const shifts = await this.shiftsService.findAll();
+    return {
+      message: 'Listado de turnos obtenido con éxito',
+      data: shifts,
     };
   }
 }

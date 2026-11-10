@@ -9,7 +9,7 @@ import { Observable } from 'rxjs/internal/Observable';
 export class ShiftService {
   private apiUrl = 'http://localhost:3000/api/shifts';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   startShift(workerCode: string): Observable<ApiResponse<Shift>> {
     return this.http.post<ApiResponse<Shift>>(`${this.apiUrl}/start`, { workerCode });
@@ -21,5 +21,9 @@ export class ShiftService {
 
   getActiveShift(workerCode: string): Observable<ActiveShiftResponse> {
     return this.http.get<ActiveShiftResponse>(`${this.apiUrl}/active/${workerCode}`);
+  }
+
+  getAllShifts(): Observable<ApiResponse<Shift[]>> {
+    return this.http.get<ApiResponse<Shift[]>>(this.apiUrl);
   }
 }

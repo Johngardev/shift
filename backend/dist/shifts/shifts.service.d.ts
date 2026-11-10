@@ -8,4 +8,5 @@ export declare class ShiftsService {
     endShift(endShiftDto: EndShiftDto): Promise<Shift>;
     getActiveShift(workerCode: string): Promise<Shift | null>;
     private formatMilliseconds;
+    findAll(): Promise<Shift[]>;
 }

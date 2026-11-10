@@ -42,6 +42,13 @@ let ShiftsController = class ShiftsController {
             data: shift,
         };
     }
+    async findAll() {
+        const shifts = await this.shiftsService.findAll();
+        return {
+            message: 'Listado de turnos obtenido con éxito',
+            data: shifts,
+        };
+    }
 };
 exports.ShiftsController = ShiftsController;
 __decorate([
@@ -65,6 +72,12 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], ShiftsController.prototype, "getActiveShift", null);
+__decorate([
+    (0, common_1.Get)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], ShiftsController.prototype, "findAll", null);
 exports.ShiftsController = ShiftsController = __decorate([
     (0, common_1.Controller)('shifts'),
     (0, common_1.UsePipes)(new common_1.ValidationPipe({ whitelist: true })),

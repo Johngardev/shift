@@ -60,6 +60,9 @@ let ShiftsService = class ShiftsService {
         const hours = Math.floor(ms / (1000 * 60 * 60));
         return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
+    async findAll() {
+        return this.shiftModel.find().sort({ createdAt: -1 }).exec();
+    }
 };
 exports.ShiftsService = ShiftsService;
 exports.ShiftsService = ShiftsService = __decorate([
