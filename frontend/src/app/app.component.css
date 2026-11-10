@@ -23,6 +23,12 @@
   box-sizing: border-box;
 }
 
+.full-width {
+  width: 100%;
+  display: block;
+  margin-bottom: 5px;
+}
+
 .table-title {
   margin: 0 0 15px 0;
   font-size: 1.2rem;
